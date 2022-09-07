@@ -1,61 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchImage } from 'services/pixabay-api';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Searchbar } from './Searchbar/Searchbar';
 import { Button } from './Button/Button';
 import { Loader } from './Loader/Loader';
 
-export class App extends React.Component {
-  state = {
-    images: [],
-    page: 1,
-    querry: '',
-    isLoading: false,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [querry, setQuerry] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  componentDidUpdate(_, pState) {
-    const prevQuerry = pState.querry.toLowerCase().trim();
-    const stateQuerry = this.state.querry.toLowerCase().trim();
-
-    if (prevQuerry !== stateQuerry) {
-      this.setState({ images: [] });
-    }
-
-    if (pState.images === this.state.images) {
-      fetchImage(this.state.querry, this.state.page)
+  useEffect(() => {
+    if (querry) {
+      setIsLoading(true);
+      fetchImage(querry, page)
         .then(response => {
-          this.setState(prevState => ({
-            images: [...prevState.images, ...response.data.hits],
-            isLoading: false,
-          }));
+          setImages(state => [...state, ...response.data.hits]);
+          setIsLoading(false);
           return response.data.hits;
         })
-        .catch(error => console.log(error));
+        .catch(error => {
+          setIsLoading(false);
+          console.log(error);
+        });
     }
-  }
+  }, [page, querry]);
 
-  onLoadMore = () => {
-    this.setState(pState => ({ page: pState.page + 1, isLoading: true }));
+  const onLoadMore = () => {
+    setPage(state => state + 1);
   };
-  onSubmit = ({ querry }) => {
-    if (this.state.querry !== querry) {
-      this.setState({ querry: querry, isLoading: true });
-      return;
+  const onSubmit = ({ querryInput }) => {
+    const optimizedQuerry = querry.toLowerCase().trim();
+    const optimizedQuerryInput = querryInput.toLowerCase().trim();
+    if (optimizedQuerry !== optimizedQuerryInput) {
+      setImages([]);
+      setPage(1);
+      setQuerry(querryInput);
     }
   };
-  render() {
-    return (
-      <div>
-        {this.state.isLoading && <Loader />}
-        <Searchbar onSubmit={this.onSubmit} />
 
-        {this.state.images.length !== 0 && (
-          <div>
-            <ImageGallery images={this.state.images} />
-            <Button onLoadMore={this.onLoadMore}>LoadMore</Button>
-          </div>
-        )}
-      </div>
-    );
-  }
-}
+  return (
+    <>
+      {isLoading && <Loader />}
+      <Searchbar onSubmit={onSubmit} />
+
+      {images.length !== 0 && (
+        <>
+          <ImageGallery images={images} />
+          <Button onLoadMore={onLoadMore}>LoadMore</Button>
+        </>
+      )}
+    </>
+  );
+};

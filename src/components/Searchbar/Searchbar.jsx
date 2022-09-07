@@ -24,10 +24,10 @@ const SearchInput = styled(Field)`
 export const Searchbar = ({ onSubmit }) => {
   return (
     <header>
-      <Formik initialValues={{ querry: '' }} onSubmit={onSubmit}>
+      <Formik initialValues={{ querryInput: '' }} onSubmit={onSubmit}>
         <SearchForm>
           <SearchInput
-            name="querry"
+            name="querryInput"
             type="text"
             autoComplete="off"
             autoFocus
